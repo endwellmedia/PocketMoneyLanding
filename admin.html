@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Pocket Money — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F5EFDF;
+    --cream-deep:#ECE2C8;
+    --paper:#FFFDF7;
+    --espresso:#241811;
+    --espresso-soft:#3B2A1D;
+    --forest:#1E5B3A;
+    --forest-deep:#123D27;
+    --gold:#C6922E;
+    --gold-light:#E9C46A;
+    --ink-soft:#5B5044;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--cream);
+    color:var(--espresso);
+    font-family:'Work Sans', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  h1,h2{ font-family:'Baloo 2', sans-serif; margin:0; }
+
+  .card{
+    background:var(--paper);
+    border-radius:24px;
+    padding:40px 36px;
+    max-width:420px;
+    width:100%;
+    box-shadow:0 18px 40px -20px rgba(36,24,17,0.35);
+    text-align:center;
+  }
+  .lock-icon{ font-size:2.2rem; margin-bottom:6px; }
+  .card p.hint{
+    color:var(--ink-soft);
+    font-size:0.92rem;
+    margin:10px 0 22px;
+  }
+  input[type="password"]{
+    width:100%;
+    padding:13px 16px;
+    border-radius:12px;
+    border:1.5px solid var(--cream-deep);
+    background:var(--cream);
+    font-size:1rem;
+    font-family:'Work Sans', sans-serif;
+    margin-bottom:14px;
+    text-align:center;
+  }
+  input[type="password"]:focus{ outline:2px solid var(--forest); border-color:var(--forest); }
+  button{
+    width:100%;
+    padding:14px;
+    border-radius:100px;
+    border:none;
+    background:var(--forest);
+    color:var(--cream);
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:1rem;
+    cursor:pointer;
+  }
+  button:hover{ background:var(--forest-deep); }
+  .error{
+    color:#B3411F;
+    font-size:0.88rem;
+    margin-top:12px;
+    min-height:18px;
+  }
+
+  .eyebrow{
+    font-family:'Baloo 2', sans-serif;
+    color:var(--forest);
+    font-weight:600;
+    font-size:0.95rem;
+    margin-bottom:6px;
+    display:block;
+  }
+  .stat-number{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:4.2rem;
+    color:var(--forest);
+    line-height:1;
+    margin:18px 0 6px;
+  }
+  .stat-label{ color:var(--espresso-soft); font-size:1rem; font-weight:500; }
+  .refresh-btn{
+    margin-top:26px;
+    background:transparent;
+    border:2px solid var(--espresso);
+    color:var(--espresso);
+  }
+  .refresh-btn:hover{ background:var(--espresso); color:var(--cream); }
+  .status{
+    margin-top:14px;
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    min-height:16px;
+  }
+  .hidden{ display:none; }
+</style>
+</head>
+<body>
+
+<div class="card" id="gate-card">
+  <div class="lock-icon">🔒</div>
+  <h1>Pocket Money Dashboard</h1>
+  <p class="hint">Enter your passcode to view download stats.</p>
+  <input type="password" id="passcode-input" placeholder="Passcode" autocomplete="off">
+  <button id="unlock-btn">Unlock</button>
+  <div class="error" id="error-msg"></div>
+</div>
+
+<div class="card hidden" id="dashboard-card">
+  <span class="eyebrow">POCKET MONEY</span>
+  <h2>Total Downloads</h2>
+  <div class="stat-number" id="count-display">—</div>
+  <div class="stat-label">people have downloaded the book</div>
+  <button class="refresh-btn" id="refresh-btn">Refresh count</button>
+  <div class="status" id="status-msg"></div>
+</div>
+
+<script>
+  // Change this to whatever passcode you want. This is a light deterrent only —
+  // since this is a static page, anyone who views the page source can see it.
+  // Real privacy here comes from this page not being linked anywhere publicly.
+  const PASSCODE = "Favour@24";
+
+  const COUNTER_URL = "https://countapi.mileshilliard.com/api/v1/get/endwellmedia-pocketmoney-downloads-v1";
+
+  const gateCard = document.getElementById('gate-card');
+  const dashboardCard = document.getElementById('dashboard-card');
+  const input = document.getElementById('passcode-input');
+  const unlockBtn = document.getElementById('unlock-btn');
+  const errorMsg = document.getElementById('error-msg');
+  const countDisplay = document.getElementById('count-display');
+  const statusMsg = document.getElementById('status-msg');
+  const refreshBtn = document.getElementById('refresh-btn');
+
+  function fetchCount(){
+    statusMsg.textContent = "Refreshing…";
+    fetch(COUNTER_URL)
+      .then(function(res){
+        if (res.status === 404) {
+          // Counter hasn't been hit yet — that just means zero downloads so far.
+          return { value: 0 };
+        }
+        return res.json();
+      })
+      .then(function(data){
+        countDisplay.textContent = data.value !== undefined ? data.value : "0";
+        const now = new Date();
+        statusMsg.textContent = "Last updated " + now.toLocaleTimeString();
+      })
+      .catch(function(){
+        statusMsg.textContent = "Couldn't reach the counter service. Try refreshing again in a moment.";
+      });
+  }
+
+  function unlock(){
+    if (input.value === PASSCODE) {
+      gateCard.classList.add('hidden');
+      dashboardCard.classList.remove('hidden');
+      fetchCount();
+    } else {
+      errorMsg.textContent = "Wrong passcode. Try again.";
+    }
+  }
+
+  unlockBtn.addEventListener('click', unlock);
+  input.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') unlock();
+  });
+  refreshBtn.addEventListener('click', fetchCount);
+</script>
+
+</body>
+</html>

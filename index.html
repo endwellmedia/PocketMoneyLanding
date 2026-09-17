@@ -603,6 +603,12 @@
   }
 
   function triggerDownload(){
+    // Fire-and-forget: log the download to a free counter API so the
+    // private dashboard (admin.html) can show how many downloads happened.
+    // This never blocks or slows down the actual download.
+    fetch('https://countapi.mileshilliard.com/api/v1/hit/endwellmedia-pocketmoney-downloads-v1')
+      .catch(function(){ /* ignore network errors, download still proceeds */ });
+
     const url = getPdfBlobUrl();
     const link = document.createElement('a');
     link.href = url;
