@@ -452,6 +452,23 @@
     .hero-actions{ flex-direction:column; align-items:flex-start; }
   }
 </style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1582607550227363');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1582607550227363&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -591,6 +608,11 @@
     btn.addEventListener('click', function(){
       fetch('https://countapi.mileshilliard.com/api/v1/hit/endwellmedia-pocketmoney-downloads-v1')
         .catch(function(){ /* ignore network errors, download still proceeds */ });
+      // Tell Meta this visitor took the desired action, so ad delivery can
+      // optimize toward people likely to download, not just click the ad.
+      if (typeof fbq === 'function') {
+        fbq('track', 'Lead');
+      }
       // No preventDefault — the button's normal href + download attribute
       // handles the actual file save natively and instantly.
     });
